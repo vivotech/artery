@@ -6,17 +6,15 @@ export function log(
   texts: string[] | string,
   options?: { type: "info" | "warn" | "error" }
 ) {
-  const log = terminal(...texts);
-
   switch (options?.type) {
     case "warn":
-      log.yellow(...texts, "\n");
+      terminal.yellow(...texts, "\n");
       break;
     case "error":
-      log.red(...texts, "\n");
+      terminal.red(...texts, "\n");
       break;
     default:
-      log(...texts, "\n");
+      terminal(...texts, "\n");
   }
 }
 
