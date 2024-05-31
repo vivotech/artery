@@ -10,13 +10,13 @@ export function log(
 
   switch (options?.type) {
     case "warn":
-      log.yellow(...texts);
+      log.yellow(...texts, "\n");
       break;
     case "error":
-      log.red(...texts);
+      log.red(...texts, "\n");
       break;
     default:
-      log(...texts);
+      log(...texts, "\n");
   }
 }
 
