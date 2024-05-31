@@ -17,7 +17,7 @@
   "author": "",
   "license": "ISC",
   "publishConfig": {
-    "registry": "http://localhost:4873"
+    "registry": "http://192.168.65:4873"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
