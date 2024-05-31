@@ -6,15 +6,17 @@ export function log(
   texts: string[] | string,
   options?: { type: "info" | "warn" | "error" }
 ) {
+  const textWithSpaces = (Array.isArray(texts) ? texts : [texts]).join(" ");
+
   switch (options?.type) {
     case "warn":
-      terminal.yellow(...texts, "\n");
+      terminal.yellow(textWithSpaces, "\n");
       break;
     case "error":
-      terminal.red(...texts, "\n");
+      terminal.red(textWithSpaces, "\n");
       break;
     default:
-      terminal(...texts, "\n");
+      terminal(textWithSpaces, "\n");
   }
 }
 
