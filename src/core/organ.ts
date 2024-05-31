@@ -1,16 +1,75 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { time } from "../common";
+import { WebSocketServer } from "ws";
+import { createServer } from "http";
 
 export interface Organ {}
 export class Organ {
   ex = express();
+  server = createServer(this.ex);
+  wss = new WebSocketServer({ clientTracking: false, noServer: true });
 
   constructor({ statics = [] }: { statics: string[] }) {
+    this.server.on("upgrade", (request, socket, head) => {
+      time("upgrade" + request.url);
+      socket.on("error", this.onSocketError);
+      this.wss.handleUpgrade(request, socket, head, (ws) => {
+        this.wss.emit("connection", ws, request);
+      });
+    });
+
     this.#setupCors();
+    this.#websockets();
 
     for (const path of statics) {
       this.ex.use(express.static(path));
     }
+  }
+
+  handleRequest(
+    callback: (params: Record<string, string>) => void,
+    req: Request,
+    res: Response
+  ) {
+    const response = JSON.stringify(callback(req.params));
+    res.send(response);
+  }
+
+  get(path: string, get: (params: Record<string, string>) => unknown) {
+    this.ex.get(path, this.handleRequest.bind(this, get));
+  }
+
+  post(path: string, post: (params: Record<string, string>) => void) {
+    this.ex.post(path, this.handleRequest.bind(this, post));
+  }
+
+  async setupApp(port: number) {
+    time(`app on ${port}`);
+    this.server.listen(port);
+  }
+
+  onSocketError(err: Error) {
+    console.error(err);
+  }
+
+  #websockets() {
+    this.wss.on("connection", function (ws, request) {
+      // const userId = request.session.userId;
+      // map.set(userId, ws);
+
+      ws.on("error", console.error);
+
+      ws.on("message", function (message) {
+        //
+        // Here we can now use session parameters.
+        //
+        console.log(`Received message ${message}`);
+      });
+
+      ws.on("close", function () {
+        // map.delete(userId);
+      });
+    });
   }
 
   #setupCors() {
@@ -28,23 +87,26 @@ export class Organ {
       next();
     });
   }
-
-  get(path: string, get: (params: Record<string, string>) => unknown) {
-    this.ex.get(path, (req, res) => {
-      const response = JSON.stringify(get(req.params));
-      res.send(response);
-    });
-  }
-
-  post(path: string, post: (params: Record<string, string>) => void) {
-    this.ex.post(path, (req, res) => {
-      const response = JSON.stringify(post(req.params));
-      res.send(response);
-    });
-  }
-
-  async setupApp(port: number) {
-    time(`app on ${port}`);
-    this.ex.listen(port);
-  }
 }
+
+/**
+ * UPGRADE
+ */
+
+/*
+  sessionParser(request, {}, () => {
+    if (!request.session.userId) {
+      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+
+    console.log("Session is parsed!");
+
+    socket.removeListener("error", this.onSocketError);
+
+    this.wss.handleUpgrade(request, socket, head,  (ws) => {
+      this.wss.emit("connection", ws, request);
+    });
+  });
+*/
