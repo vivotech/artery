@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "release": "npm run build && npx semantic-release",
     "test": "jest"
   },
   "keywords": [],
