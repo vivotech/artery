@@ -11,7 +11,7 @@ export class Organ {
 
   constructor({ statics = [] }: { statics: string[] }) {
     this.server.on("upgrade", (request, socket, head) => {
-      time("upgrade" + request.url);
+      time("init user" + request.url);
       socket.on("error", this.onSocketError);
       this.wss.handleUpgrade(request, socket, head, (ws) => {
         this.wss.emit("connection", ws, request);
