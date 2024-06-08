@@ -26,12 +26,12 @@ export class Vessel {
     }
   }
 
-  handleRequest(
+  async handleRequest(
     callback: (params: Record<string, string>) => Promise<unknown>,
     req: Request,
     res: Response
   ) {
-    const response = JSON.stringify(callback(req.params));
+    const response = JSON.stringify(await callback(req.params));
     res.send(response);
   }
 
