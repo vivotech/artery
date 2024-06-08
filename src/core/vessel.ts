@@ -3,8 +3,8 @@ import { time } from "../common";
 import { WebSocketServer } from "ws";
 import { createServer } from "http";
 
-export interface Organ {}
-export class Organ {
+export interface Vessel {}
+export class Vessel {
   ex = express();
   server = createServer(this.ex);
   wss = new WebSocketServer({ clientTracking: false, noServer: true });
@@ -27,7 +27,7 @@ export class Organ {
   }
 
   handleRequest(
-    callback: (params: Record<string, string>) => void,
+    callback: (params: Record<string, string>) => Promise<unknown>,
     req: Request,
     res: Response
   ) {
@@ -35,12 +35,18 @@ export class Organ {
     res.send(response);
   }
 
-  get(path: string, get: (params: Record<string, string>) => unknown) {
-    this.ex.get(path, this.handleRequest.bind(this, get));
+  async get(
+    path: string,
+    get: (params: Record<string, string>) => Promise<unknown>
+  ) {
+    this.ex.get(path, this.handleRequest.bind(this, await get));
   }
 
-  post(path: string, post: (params: Record<string, string>) => void) {
-    this.ex.post(path, this.handleRequest.bind(this, post));
+  async post(
+    path: string,
+    post: (params: Record<string, string>) => Promise<unknown>
+  ) {
+    this.ex.post(path, this.handleRequest.bind(this, await post));
   }
 
   async setupApp(port: number) {
