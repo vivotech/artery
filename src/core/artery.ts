@@ -3,8 +3,8 @@ import { time } from "../common";
 import { WebSocketServer } from "ws";
 import { createServer } from "http";
 
-export interface Vessel {}
-export class Vessel {
+export interface Artery {}
+export class Artery {
   ex = express();
   server = createServer(this.ex);
   wss = new WebSocketServer({ clientTracking: false, noServer: true });
