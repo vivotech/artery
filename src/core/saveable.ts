@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 
 import { readFile, writeFile } from "fs/promises";
-import { log, time } from "../common/log";
+import { out, time } from "@vivotech/out";
 export class Saveable<Type = Iterable<[string, unknown]>> {
   filename = "data.json";
   data: Type | null = null;
@@ -33,7 +33,7 @@ export class Saveable<Type = Iterable<[string, unknown]>> {
         try {
           data = JSON.parse(file);
         } catch (error: unknown) {
-          log(error as string);
+          out(error as string);
         }
       }
 

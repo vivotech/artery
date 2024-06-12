@@ -1,7 +1,8 @@
+import { time } from "@vivotech/out";
 import express, { Request, Response } from "express";
-import { time } from "../common";
-import { WebSocketServer } from "ws";
+import { readFileSync } from "fs";
 import { createServer } from "http";
+import { WebSocketServer } from "ws";
 
 export interface Artery {}
 export class Artery {
@@ -9,9 +10,15 @@ export class Artery {
   server = createServer(this.ex);
   wss = new WebSocketServer({ clientTracking: false, noServer: true });
 
+  pkg = {
+    name: "unknown artery",
+    version: "x.x.x",
+  };
+
   constructor({ statics = [] }: { statics: string[] }) {
+    this.#loadPackageData();
+
     this.server.on("upgrade", (request, socket, head) => {
-      time("init user" + request.url);
       socket.on("error", this.onSocketError);
       this.wss.handleUpgrade(request, socket, head, (ws) => {
         this.wss.emit("connection", ws, request);
@@ -24,6 +31,20 @@ export class Artery {
     for (const path of statics) {
       this.ex.use(express.static(path));
     }
+
+    this.#welcomeLog();
+  }
+
+  #loadPackageData() {
+    const pkg = JSON.parse(
+      readFileSync(process.cwd() + "/package.json").toString()
+    );
+
+    this.pkg = { ...this.pkg, ...pkg };
+  }
+
+  #welcomeLog() {
+    time(`${this.pkg.name} ${this.pkg.version}`);
   }
 
   async handleRequest(
@@ -50,7 +71,7 @@ export class Artery {
   }
 
   async setupApp(port: number) {
-    time(`app on ${port}`);
+    time(`${this.pkg.name ?? "app"} on ${port}`);
     this.server.listen(port);
   }
 
