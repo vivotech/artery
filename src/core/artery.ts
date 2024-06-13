@@ -39,7 +39,7 @@ export class Artery {
     this.#welcomeLog();
   }
 
-  recive<Data = unknown>(callback: (data: Data) => void) {
+  recive<Data = unknown>(callback: (data: Data, socket: WebSocket) => void) {
     this.conduit.on("data", callback);
   }
 
