@@ -1,4 +1,5 @@
 import { time } from "@vivotech/out";
+import { randomUUID } from "crypto";
 import EventEmitter from "events";
 import express, { Request, Response } from "express";
 import { readFileSync } from "fs";
@@ -10,6 +11,7 @@ export class Artery {
   ex = express();
   server = createServer(this.ex);
   wss = new WebSocketServer({ clientTracking: false, noServer: true });
+  connected = new Map<string, WebSocket>();
   conduit = new EventEmitter();
 
   pkg = {
@@ -48,7 +50,7 @@ export class Artery {
   }
 
   broadcast<Data = unknown>(data: Data) {
-    this.wss.clients.forEach((client) => {
+    this.connected.forEach((client) => {
       this.send(client, data);
     });
   }
@@ -99,6 +101,8 @@ export class Artery {
 
   #websockets() {
     this.wss.on("connection", (ws, request) => {
+      const uid = randomUUID();
+      this.connected.set(uid, ws);
       // const userId = request.session.userId;
       // map.set(userId, ws);
 
@@ -111,9 +115,7 @@ export class Artery {
         this.conduit.emit("data", JSON.parse(message.toString()), ws);
       });
 
-      ws.on("close", function () {
-        // map.delete(userId);
-      });
+      ws.on("close", () => this.connected.delete(uid));
     });
   }
 
