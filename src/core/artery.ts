@@ -45,7 +45,7 @@ export class Artery {
 
   send<Data = unknown>(client: WebSocket, data: Data) {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({ data }));
+      client.send(JSON.stringify(data));
     }
   }
 
