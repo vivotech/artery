@@ -1,14 +1,16 @@
 import { time } from "@vivotech/out";
+import EventEmitter from "events";
 import express, { Request, Response } from "express";
 import { readFileSync } from "fs";
 import { createServer } from "http";
-import { WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
 
 export interface Artery {}
 export class Artery {
   ex = express();
   server = createServer(this.ex);
   wss = new WebSocketServer({ clientTracking: false, noServer: true });
+  conduit = new EventEmitter();
 
   pkg = {
     name: "unknown artery",
@@ -33,6 +35,22 @@ export class Artery {
     }
 
     this.#welcomeLog();
+  }
+
+  recive<Data = unknown>(callback: (data: Data) => void) {
+    this.conduit.on("data", callback);
+  }
+
+  send<Data = unknown>(client: WebSocket, data: Data) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ data }));
+    }
+  }
+
+  broadcast<Data = unknown>(data: Data) {
+    this.wss.clients.forEach((client) => {
+      this.send(client, data);
+    });
   }
 
   #loadPackageData() {
@@ -80,17 +98,17 @@ export class Artery {
   }
 
   #websockets() {
-    this.wss.on("connection", function (ws, request) {
+    this.wss.on("connection", (ws, request) => {
       // const userId = request.session.userId;
       // map.set(userId, ws);
 
       ws.on("error", console.error);
 
-      ws.on("message", function (message) {
+      ws.on("message", (message) => {
         //
         // Here we can now use session parameters.
         //
-        console.log(`Received message ${message}`);
+        this.conduit.emit("data", JSON.parse(message.toString()), ws);
       });
 
       ws.on("close", function () {
