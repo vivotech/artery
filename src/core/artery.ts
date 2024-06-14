@@ -68,24 +68,34 @@ export class Artery {
   }
 
   async handleRequest(
-    callback: (params: Record<string, string>) => Promise<unknown>,
+    callback: (
+      params: Record<string, string>,
+      query: Request["query"]
+    ) => Promise<unknown>,
     req: Request,
     res: Response
   ) {
-    const response = JSON.stringify(await callback(req.params));
+    const response = JSON.stringify(await callback(req.params, req.query));
+
     res.send(response);
   }
 
   async get(
     path: string,
-    get: (params: Record<string, string>) => Promise<unknown>
+    get: (
+      params: Record<string, string>,
+      query: Request["query"]
+    ) => Promise<unknown>
   ) {
     this.ex.get(path, this.handleRequest.bind(this, await get));
   }
 
   async post(
     path: string,
-    post: (params: Record<string, string>) => Promise<unknown>
+    post: (
+      params: Record<string, string>,
+      query: Request["query"]
+    ) => Promise<unknown>
   ) {
     this.ex.post(path, this.handleRequest.bind(this, await post));
   }
