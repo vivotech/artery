@@ -5,8 +5,8 @@ import express, { Request, Response } from "express";
 import { readFileSync } from "fs";
 import { createServer } from "http";
 import { WebSocket, WebSocketServer } from "ws";
+import { ArteryStatus } from "./status";
 
-export interface Artery {}
 export class Artery {
   ex = express();
   server = createServer(this.ex);
@@ -27,6 +27,10 @@ export class Artery {
       this.wss.handleUpgrade(request, socket, head, (ws) => {
         this.wss.emit("connection", ws, request);
       });
+    });
+
+    this.get<ArteryStatus>("/status", async () => {
+      return { ...this.pkg, uptime: process.uptime() };
     });
 
     this.#setupCors();
@@ -80,12 +84,12 @@ export class Artery {
     res.send(response);
   }
 
-  async get(
+  async get<Response = unknown>(
     path: string,
     get: (
       params: Record<string, string>,
       query: Request["query"]
-    ) => Promise<unknown>
+    ) => Promise<Response>
   ) {
     this.ex.get(path, this.handleRequest.bind(this, await get));
   }
