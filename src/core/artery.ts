@@ -30,7 +30,16 @@ export class Artery {
     });
 
     this.get<ArteryStatus>("/status", async () => {
-      return { ...this.pkg, uptime: process.uptime() };
+      const { name, version } = this.pkg;
+      return {
+        uptime: process.uptime(),
+        installed: true,
+        enabled: null,
+        active: true,
+        port: null,
+        version,
+        name,
+      };
     });
 
     this.#setupCors();
