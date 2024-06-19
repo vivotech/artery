@@ -41,16 +41,24 @@ export class ArteryList<
     return [...this.#data.values()];
   }
 
-  init(values: Model[]) {
+  // on init Model can be without id
+  init(values: (Model | Omit<Model, "id">)[]) {
     this.#data.clear();
 
+    const data = [];
+
     for (const value of values) {
-      this.#data.set(value.id, value);
+      const id: string =
+        "id" in value ? value.id : Math.random().toString(36).substring(2, 15);
+      const val = { ...value, id } as Model;
+
+      this.#data.set(id, val);
+      data.push(val);
     }
 
     const response: ArteryListAllResponse<Model> = {
-      data: [...values],
       type: "all",
+      data,
     };
 
     yell([...this.artery.connected.values()], {
@@ -101,6 +109,10 @@ export class ArteryList<
 
     for (const value of values) {
       const item = { ...this.#data.get(value.id), ...value };
+
+      if (!item.id) {
+        item.id = Math.random().toString(36).substring(2, 15);
+      }
 
       this.#data.set(value.id, item);
       update.push(item);
