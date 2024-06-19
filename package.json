@@ -1,6 +1,10 @@
 {
   "name": "@vivotech/artery",
+<<<<<<< HEAD
   "version": "1.4.0",
+=======
+  "version": "1.3.3",
+>>>>>>> 40563c4 (refactor: bash shell change)
   "description": "",
   "private": false,
   "main": "./dist/index.js",

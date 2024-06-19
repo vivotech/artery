@@ -29,8 +29,12 @@ export function bash(
 
   try {
     const bash = spawn("sudo", ["-u", user ?? "dev", command, ...args], {
+<<<<<<< HEAD
       stdio: "pipe",
       shell: true,
+=======
+      // shell: true,
+>>>>>>> 40563c4 (refactor: bash shell change)
       cwd,
     });
 
