@@ -49,22 +49,6 @@ export class Artery {
     this.#welcomeLog();
   }
 
-  recive<Data = unknown>(callback: (data: Data, socket: WebSocket) => void) {
-    this.conduit.on("data", callback);
-  }
-
-  send<Data = unknown>(client: WebSocket, data: Data) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(data));
-    }
-  }
-
-  broadcast<Data = unknown>(data: Data) {
-    this.connected.forEach((client) => {
-      this.send(client, data);
-    });
-  }
-
   #loadPackageData() {
     const pkg = JSON.parse(
       readFileSync(process.cwd() + "/package.json").toString()
