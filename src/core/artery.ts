@@ -24,10 +24,12 @@ export class Artery {
 
   constructor({
     statics = [],
-    lists = [],
+    lists = {},
   }: {
     statics?: string[];
-    lists?: ArteryList[];
+    lists?: {
+      [signature: string]: typeof ArteryList;
+    };
   }) {
     this.#loadPackageData();
 
@@ -72,7 +74,7 @@ export class Artery {
     res.send(response);
   }
 
-  #registerLists(lists: ArteryList[]) {
+  #registerLists(lists: { [signature: string]: typeof ArteryList }) {
     this.get("/lists", async () => [...this.#lists.keys()]);
 
     this.get("/list/all", async (params, query) => {
@@ -85,13 +87,13 @@ export class Artery {
       return this.#lists.get(signature)?.all();
     });
 
-    for (const list of lists) {
-      this.registerList(list);
+    for (const [signature, List] of Object.entries(lists)) {
+      this.registerList(signature, List);
     }
   }
 
-  registerList(list: ArteryList) {
-    this.#lists.set(list.signature, list);
+  registerList(signature: string, List: typeof ArteryList) {
+    this.#lists.set(signature, new List(signature, this));
   }
 
   async get<Response = unknown>(path: string, get: RequestFunc<Response>) {
