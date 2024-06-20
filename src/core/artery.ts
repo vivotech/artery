@@ -5,6 +5,7 @@ import express, { Request, Response } from "express";
 import { readFileSync } from "fs";
 import { createServer } from "http";
 import { WebSocket, WebSocketServer } from "ws";
+import { ArteryList } from "../list";
 import { ArteryStatus } from "./status";
 
 export class Artery {
@@ -19,11 +20,19 @@ export class Artery {
     version: "x.x.x",
   };
 
-  constructor({ statics = [] }: { statics: string[] }) {
+  #lists = new Map<string, ArteryList>();
+
+  constructor({
+    statics = [],
+    lists = [],
+  }: {
+    statics?: string[];
+    lists?: ArteryList[];
+  }) {
     this.#loadPackageData();
 
     this.server.on("upgrade", (request, socket, head) => {
-      socket.on("error", this.onSocketError);
+      socket.on("error", this.#onSocketError);
       this.wss.handleUpgrade(request, socket, head, (ws) => {
         this.wss.emit("connection", ws, request);
       });
@@ -46,19 +55,8 @@ export class Artery {
       this.ex.use(express.static(path));
     }
 
+    this.#registerLists(lists);
     this.#welcomeLog();
-  }
-
-  #loadPackageData() {
-    const pkg = JSON.parse(
-      readFileSync(process.cwd() + "/package.json").toString()
-    );
-
-    this.pkg = { ...this.pkg, ...pkg };
-  }
-
-  #welcomeLog() {
-    time(`${this.pkg.name} ${this.pkg.version}`);
   }
 
   async handleRequest(
@@ -74,32 +72,54 @@ export class Artery {
     res.send(response);
   }
 
-  async get<Response = unknown>(
-    path: string,
-    get: (
-      params: Record<string, string>,
-      query: Request["query"]
-    ) => Promise<Response>
-  ) {
+  #registerLists(lists: ArteryList[]) {
+    this.get("/lists", async () => [...this.#lists.keys()]);
+
+    this.get("/list/all", async (params, query) => {
+      const signature = query.signature;
+
+      if (typeof signature !== "string") {
+        return [];
+      }
+
+      return this.#lists.get(signature)?.all();
+    });
+
+    for (const list of lists) {
+      this.registerList(list);
+    }
+  }
+
+  registerList(list: ArteryList) {
+    this.#lists.set(list.signature, list);
+  }
+
+  async get<Response = unknown>(path: string, get: RequestFunc<Response>) {
     this.ex.get(path, this.handleRequest.bind(this, await get));
   }
 
-  async post(
-    path: string,
-    post: (
-      params: Record<string, string>,
-      query: Request["query"]
-    ) => Promise<unknown>
-  ) {
+  async post<Response = unknown>(path: string, post: RequestFunc<Response>) {
     this.ex.post(path, this.handleRequest.bind(this, await post));
   }
 
   async setupApp(port: number) {
-    time(`${this.pkg.name ?? "app"} on ${port}`);
+    time(`[ARTERY] ${this.pkg.name ?? "app"} on http://127.0.0.1:${port}`);
     this.server.listen(port);
   }
 
-  onSocketError(err: Error) {
+  #loadPackageData() {
+    const pkg = JSON.parse(
+      readFileSync(process.cwd() + "/package.json").toString()
+    );
+
+    this.pkg = { ...this.pkg, ...pkg };
+  }
+
+  #welcomeLog() {
+    time(`[ARTERY] ${this.pkg.name} ${this.pkg.version}`);
+  }
+
+  #onSocketError(err: Error) {
     console.error(err);
   }
 
@@ -139,6 +159,11 @@ export class Artery {
     });
   }
 }
+
+export type RequestFunc<Response = unknown> = (
+  params: Record<string, string>,
+  query: Request["query"]
+) => Promise<Response>;
 
 /**
  * UPGRADE

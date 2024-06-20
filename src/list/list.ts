@@ -29,7 +29,7 @@ export class ArteryList<
   Model extends ArteryListItem = ArteryListItem,
   Art extends Artery = Artery
 > {
-  constructor(private signature: string, private artery: Art) {}
+  constructor(public signature: string, private artery: Art) {}
 
   #data = new Map<string, Model>();
 
