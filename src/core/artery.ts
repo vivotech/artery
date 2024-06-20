@@ -74,6 +74,10 @@ export class Artery {
     res.send(response);
   }
 
+  inject<ListType extends ArteryList = ArteryList>(signature: string) {
+    return this.#lists.get(signature) as ListType;
+  }
+
   #registerLists(lists: { [signature: string]: typeof ArteryList }) {
     this.get("/lists", async () => [...this.#lists.keys()]);
 
