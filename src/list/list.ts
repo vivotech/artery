@@ -37,7 +37,7 @@ export class ArteryList<
     return this.#data.get(id);
   }
 
-  get all() {
+  all() {
     return [...this.#data.values()];
   }
 
